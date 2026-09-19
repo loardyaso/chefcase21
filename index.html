@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ตารางเคสนอก / เคสใน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>{% raw %}
+:root{
+  --bg:#f3f5f9; --surface:#ffffff; --ink:#18213a; --muted:#64708c; --line:#dde2ee;
+  --in:#2f3fc0; --in-soft:#e4e7fb; --in-ink:#ffffff;
+  --out:#f0a824; --out-soft:#fdf0d2; --out-ink:#3b2700;
+  --ok:#137a4a; --warn:#b4491a; --focus:#2f3fc0;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1424; --surface:#182036; --ink:#e9edf8; --muted:#95a1bf; --line:#2a3453;
+    --in:#7b8bff; --in-soft:#232b57; --in-ink:#0f1424;
+    --out:#f5b73f; --out-soft:#3b3116; --out-ink:#1d1400;
+    --ok:#4fd398; --warn:#ff9b6b; --focus:#9aa6ff;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1424; --surface:#182036; --ink:#e9edf8; --muted:#95a1bf; --line:#2a3453;
+  --in:#7b8bff; --in-soft:#232b57; --in-ink:#0f1424;
+  --out:#f5b73f; --out-soft:#3b3116; --out-ink:#1d1400;
+  --ok:#4fd398; --warn:#ff9b6b; --focus:#9aa6ff;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Thai","Noto Sans Thai","Sarabun",system-ui,sans-serif;font-size:16px;line-height:1.55}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[hidden]{display:none !important}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 96px}
+
+header.top{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px}
+h1{font-size:1.5rem;margin:0;font-weight:700}
+.sub{color:var(--muted);font-size:.85rem;margin-top:2px}
+.hright{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px}
+.tab{border:0;background:transparent;padding:8px 16px;border-radius:9px;cursor:pointer;color:var(--muted);font-weight:500}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+.pill{font-size:.78rem;padding:3px 10px;border-radius:999px;background:var(--in-soft);color:var(--in);font-weight:600}
+
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:14px}
+.btn{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:10px;cursor:pointer;font-weight:500}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn:disabled{opacity:.55;cursor:default}
+.datetitle{font-size:1.15rem;font-weight:600}
+input[type="date"],input[type="search"],input[type="number"],input[type="text"],input[type="password"],select,textarea{
+  background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;max-width:100%}
+input[type="search"]{flex:1;min-width:150px;max-width:260px}
+.spacer{flex:1}
+.note{color:var(--muted);font-size:.9rem;margin:0 0 12px}
+
+.board{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:640px){.board{grid-template-columns:1fr}}
+.panel{border-radius:16px;overflow:hidden;background:var(--surface);border:1px solid var(--line)}
+.panel h2{margin:0;padding:16px 18px;display:flex;justify-content:space-between;align-items:baseline;font-size:1.3rem}
+.panel h2 small{font-size:.9rem;font-weight:500;opacity:.85}
+.panel.in h2{background:var(--in);color:var(--in-ink)}
+.panel.out h2{background:var(--out);color:var(--out-ink)}
+.panel ul{list-style:none;margin:0;padding:8px}
+.panel li{padding:9px 12px;border-radius:9px;display:flex;justify-content:space-between;gap:8px}
+.panel li + li{margin-top:2px}
+.panel.in li:nth-child(odd){background:var(--in-soft)}
+.panel.out li:nth-child(odd){background:var(--out-soft)}
+.panel li.hit{outline:2px solid var(--ink)}
+.panel li .tag{font-size:.75rem;color:var(--muted)}
+.empty{padding:18px;color:var(--muted)}
+.rest{background:var(--surface);border:1px dashed var(--line);border-radius:14px;padding:28px;text-align:center;color:var(--muted)}
+
+.matrix-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+table.matrix{border-collapse:separate;border-spacing:0;min-width:100%;font-size:.82rem}
+.matrix th,.matrix td{padding:0;text-align:center;border-bottom:1px solid var(--line)}
+.matrix thead th{background:var(--surface);padding:6px 0;font-weight:500;color:var(--muted)}
+.matrix th.name,.matrix td.name{position:sticky;left:0;background:var(--surface);text-align:left;padding:6px 12px;white-space:nowrap;min-width:150px;z-index:2;border-right:1px solid var(--line);font-weight:500}
+.matrix th.day{min-width:34px}
+.matrix th.day .dow{display:block;font-size:.68rem}
+.matrix th.today,.matrix td.today{box-shadow:inset 0 0 0 2px var(--ink)}
+.matrix th.we{opacity:.6}
+.matrix th.offd{opacity:.4}
+.cell{display:block;width:100%;height:32px;line-height:32px;border:0;background:transparent;font-size:.72rem;font-weight:600;text-align:center}
+button.cell{cursor:pointer}
+.cell.in{background:var(--in-soft);color:var(--in)}
+.cell.out{background:var(--out-soft);color:var(--out-ink)}
+.cell.ov{text-decoration:underline}
+.cell.off{color:var(--muted);font-weight:400}
+.matrix td.sum,.matrix th.sum{min-width:44px;padding:0 6px;font-variant-numeric:tabular-nums;color:var(--muted)}
+.fair{margin:12px 2px 6px;font-weight:600}
+.fair.ok{color:var(--ok)} .fair.bad{color:var(--warn)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin:6px 2px}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:6px}
+.sw.in{background:var(--in)} .sw.out{background:var(--out)}
+
+.settings{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:760px){.settings{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+.card h3{margin:0 0 10px;font-size:1.05rem}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.field label{font-size:.9rem;font-weight:500}
+.field .hint{font-size:.82rem;color:var(--muted)}
+textarea{width:100%;min-height:340px;resize:vertical;line-height:1.7}
+
+.savebar{position:fixed;left:0;right:0;bottom:0;background:var(--ink);color:var(--bg);padding:12px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;z-index:20}
+.savebar .btn{border-color:transparent}
+.savebar .btn.primary{background:var(--out);color:var(--out-ink)}
+.modal{position:fixed;inset:0;background:rgba(10,14,28,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:30}
+.modal .box{background:var(--surface);border-radius:16px;padding:22px;width:100%;max-width:340px;border:1px solid var(--line)}
+.modal h3{margin:0 0 12px}
+.modal .field input{width:100%}
+.err{color:var(--warn);font-size:.88rem;min-height:1.3em;margin:0 0 8px}
+.row{display:flex;gap:8px;justify-content:flex-end}
+.toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:40;max-width:90vw;text-align:center}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion: reduce){*{transition:none !important}}
+{% endraw %}</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+window.__INITIAL__ = {{ state|tojson }};
+window.__ADMIN__ = {{ admin|tojson }};
+</script>
+<script>
+{% raw %}(function(){
+  var DOW = ["อา","จ","อ","พ","พฤ","ศ","ส"];
+
+  var SKEL =
+    '<div class="wrap">' +
+    '<header class="top"><div><h1>ตารางเคสนอก / เคสใน</h1><div class="sub" id="sub"></div></div>' +
+    '<div class="hright"><div class="tabs" id="tabs" role="tablist"></div><button class="btn" id="btn-admin"></button></div></header>' +
+
+    '<section id="view-day">' +
+      '<div class="bar"><button class="btn" id="d-prev" aria-label="วันก่อนหน้า">‹</button>' +
+      '<input type="date" id="d-date" aria-label="เลือกวันที่"><button class="btn" id="d-next" aria-label="วันถัดไป">›</button>' +
+      '<button class="btn" id="d-today">วันนี้</button><span class="spacer"></span>' +
+      '<input type="search" id="q" placeholder="ค้นหาชื่อ" aria-label="ค้นหาชื่อ">' +
+      '<button class="btn primary" id="d-copy">คัดลอกเป็นข้อความ</button></div>' +
+      '<div class="datetitle" id="d-title" style="margin-bottom:4px"></div>' +
+      '<div class="note" id="d-note"></div>' +
+      '<div id="d-body"></div>' +
+    '</section>' +
+
+    '<section id="view-month" hidden>' +
+      '<div class="bar"><button class="btn" id="m-prev" aria-label="เดือนก่อนหน้า">‹</button>' +
+      '<span class="datetitle" id="m-title"></span><button class="btn" id="m-next" aria-label="เดือนถัดไป">›</button>' +
+      '<button class="btn" id="m-today">เดือนนี้</button><span class="spacer"></span>' +
+      '<input type="search" id="q2" placeholder="ค้นหาชื่อ" aria-label="ค้นหาชื่อ"></div>' +
+      '<div class="matrix-wrap"><table class="matrix" id="matrix"></table></div>' +
+      '<div class="fair" id="m-fair"></div>' +
+      '<div class="legend"><span><i class="sw in"></i>เคสใน</span><span><i class="sw out"></i>เคสนอก</span>' +
+      '<span id="m-tip"></span></div>' +
+    '</section>' +
+
+    '<section id="view-set" hidden>' +
+      '<div class="settings">' +
+        '<div class="card"><h3>รายชื่อ</h3><div class="field"><label for="s-names">ชื่อ (หนึ่งบรรทัดต่อหนึ่งคน)</label>' +
+        '<textarea id="s-names"></textarea><span class="hint" id="s-count"></span></div></div>' +
+        '<div><div class="card" style="margin-bottom:16px"><h3>กติกาการแบ่งเคส</h3>' +
+        '<div class="field"><label for="s-in">จำนวนคนเคสใน ต่อวัน</label><input type="number" id="s-in" min="0" max="99">' +
+        '<span class="hint">ที่เหลือเป็นเคสนอกอัตโนมัติ</span></div>' +
+        '<div class="field"><label for="s-days">จำนวนวันที่มีเคสต่อเดือน</label><input type="number" id="s-days" min="1" max="31">' +
+        '<span class="hint" id="s-rule"></span></div>' +
+        '<div class="field"><label for="s-seed">รหัสสุ่ม (seed)</label><input type="text" id="s-seed">' +
+        '<span class="hint">เปลี่ยนรหัสเพื่อได้ตารางชุดใหม่ ผลของแต่ละรหัสจะคงที่เสมอ</span></div>' +
+        '<button class="btn" id="s-clear">ล้างการแก้ด้วยมือทั้งหมด</button></div>' +
+        '<div class="card"><h3>เปลี่ยนรหัสผ่านแอดมิน</h3>' +
+        '<div class="field"><label for="p-cur">รหัสผ่านปัจจุบัน</label><input type="password" id="p-cur" autocomplete="current-password"></div>' +
+        '<div class="field"><label for="p-new">รหัสผ่านใหม่ (อย่างน้อย 6 ตัว)</label><input type="password" id="p-new" autocomplete="new-password"></div>' +
+        '<button class="btn" id="p-go">เปลี่ยนรหัสผ่าน</button></div></div>' +
+      '</div>' +
+    '</section>' +
+
+    '<div class="savebar" id="savebar" hidden><span id="save-msg"></span>' +
+    '<button class="btn primary" id="save-go">บันทึก</button><button class="btn" id="save-cancel">ยกเลิกการแก้ไข</button></div>' +
+
+    '<div class="modal" id="login" hidden><form class="box" id="login-form" autocomplete="off"><h3>เข้าสู่ระบบผู้ดูแล</h3>' +
+      '<div class="field"><label for="l-id">ID</label><input type="text" id="l-id" autocomplete="username"></div>' +
+      '<div class="field"><label for="l-pw">Password</label><input type="password" id="l-pw" autocomplete="current-password"></div>' +
+      '<p class="err" id="l-err"></p><div class="row"><button type="button" class="btn" id="l-cancel">ปิด</button>' +
+      '<button type="submit" class="btn primary">เข้าสู่ระบบ</button></div></form></div>' +
+    '<div class="toast" id="toast" role="status"></div>' +
+    '</div>';
+
+  var $ = function(id){ return document.getElementById(id); };
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+  var saved = clone(window.__INITIAL__);
+  var S = clone(saved);
+  function norm(s){
+    if (!Array.isArray(s.names)) s.names = [];
+    s.inCount = isFinite(s.inCount) ? s.inCount : 8;
+    s.caseDays = isFinite(s.caseDays) && s.caseDays > 0 ? s.caseDays : 30;
+    s.seed = s.seed || "case-1";
+    s.overrides = s.overrides || {};
+  }
+  norm(S); norm(saved);
+
+  var isAdmin = !!window.__ADMIN__, dirty = false, saving = false, view = "day", q = "";
+
+  function pad(n){ return (n<10?"0":"")+n; }
+  function keyOf(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+  function fromKey(k){ var p=k.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
+  function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+  function fmtLong(d){ return d.toLocaleDateString("th-TH",{weekday:"long",day:"numeric",month:"long",year:"numeric"}); }
+  function hash(str){ var h=2166136261; for (var i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h,16777619); } return h>>>0; }
+
+  // กติกา: ทุกเดือนใช้ N วันแรก (ค่าเริ่มต้น 30) วันละ K คนเคสใน เลือกคนที่เข้าเคสในน้อยสุดในเดือนนั้นก่อน
+  var cache = { sig: "", months: {} };
+  function monthMap(y, m){
+    var sig = S.names.join("|")+"#"+S.inCount+"#"+S.seed+"#"+S.caseDays;
+    if (cache.sig !== sig) cache = { sig: sig, months: {} };
+    var mk = y+"-"+pad(m+1);
+    if (!cache.months[mk]){
+      var dim = new Date(y, m+1, 0).getDate(), n = Math.min(S.caseDays, dim);
+      var names = S.names, k = Math.max(0, Math.min(S.inCount, names.length)), cnt = {}, map = {};
+      names.forEach(function(nm){ cnt[nm] = 0; });
+      for (var d=1; d<=n; d++){
+        var dk = mk+"-"+pad(d);
+        var ranked = names.map(function(nm){ return { nm:nm, c:cnt[nm], h:hash(S.seed+"|"+dk+"|"+nm) }; })
+          .sort(function(a,b){ return a.c-b.c || a.h-b.h || (a.nm<b.nm?-1:1); });
+        var r = {};
+        ranked.forEach(function(x,i){ if (i<k){ r[x.nm]="in"; cnt[x.nm]++; } else r[x.nm]="out"; });
+        map[dk] = r;
+      }
+      cache.months[mk] = map;
+    }
+    return cache.months[mk];
+  }
+  function base(d){ return monthMap(d.getFullYear(), d.getMonth())[keyOf(d)] || null; }
+  function statusOf(d, nm){
+    var ov = S.overrides[keyOf(d)+"|"+nm]; if (ov) return ov;
+    var b = base(d); return b ? b[nm] : null;
+  }
+  function resetCache(){ cache = { sig:"", months:{} }; }
+
+  function toast(msg){
+    var t = $("toast"); t.textContent = msg; t.classList.add("show");
+    clearTimeout(toast._t); toast._t = setTimeout(function(){ t.classList.remove("show"); }, 2800);
+  }
+  function api(path, method, body){
+    return fetch(path, {
+      method: method || "GET", credentials: "same-origin",
+      headers: body ? { "Content-Type": "application/json" } : undefined,
+      body: body ? JSON.stringify(body) : undefined
+    }).then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){ return { status: r.status, data: j }; }); });
+  }
+
+  var cur = new Date(); cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate());
+  var mView = new Date(cur.getFullYear(), cur.getMonth(), 1);
+
+  function renderDay(){
+    $("d-date").value = keyOf(cur);
+    $("d-title").textContent = fmtLong(cur);
+    var b = base(cur), body = $("d-body");
+    if (!b){
+      $("d-note").textContent = "";
+      body.innerHTML = '<div class="rest">วันนี้เป็นวันพัก ไม่มีเคส<br><small>ในแต่ละเดือนมีเคสเฉพาะ ' + S.caseDays + ' วันแรก</small></div>';
+      return;
+    }
+    $("d-note").textContent = "วันที่ " + cur.getDate() + " ของเดือน (จากทั้งหมด " + Math.min(S.caseDays, new Date(cur.getFullYear(), cur.getMonth()+1, 0).getDate()) + " วันที่มีเคส)";
+    var ql = q.trim().toLowerCase(), ins = [], outs = [];
+    S.names.forEach(function(nm){
+      var st = statusOf(cur, nm);
+      var li = '<li' + (ql && nm.toLowerCase().indexOf(ql) !== -1 ? ' class="hit"' : '') + '><span>' + esc(nm) + '</span>' +
+        (S.overrides[keyOf(cur)+"|"+nm] ? '<span class="tag">แก้ด้วยมือ</span>' : '') + '</li>';
+      (st === "in" ? ins : outs).push(li);
+    });
+    body.innerHTML =
+      '<div class="board">' +
+      '<div class="panel in"><h2>เคสใน <small>' + ins.length + ' คน</small></h2><ul>' + (ins.join("") || '<li class="empty">ไม่มีใครเข้าเคสใน</li>') + '</ul></div>' +
+      '<div class="panel out"><h2>เคสนอก <small>' + outs.length + ' คน</small></h2><ul>' + (outs.join("") || '<li class="empty">ไม่มีใครเข้าเคสนอก</li>') + '</ul></div></div>';
+  }
+
+  function renderMonth(){
+    var y = mView.getFullYear(), m = mView.getMonth(), days = new Date(y, m+1, 0).getDate();
+    $("m-title").textContent = mView.toLocaleDateString("th-TH",{month:"long",year:"numeric"});
+    var todayKey = keyOf(new Date()), ql = q.trim().toLowerCase();
+    var head = '<thead><tr><th class="name">ชื่อ</th>', dts = [];
+    for (var d=1; d<=days; d++){
+      var dt = new Date(y,m,d); dts.push(dt);
+      var cls = "day" + (keyOf(dt)===todayKey ? " today" : "") + (dt.getDay()===0||dt.getDay()===6 ? " we" : "") + (d > S.caseDays ? " offd" : "");
+      head += '<th class="'+cls+'">'+d+'<span class="dow">'+DOW[dt.getDay()]+'</span></th>';
+    }
+    head += '<th class="sum">ใน</th><th class="sum">นอก</th></tr></thead>';
+    var body = "<tbody>", ins = [], outs = [], tag = isAdmin ? "button" : "span";
+    S.names.forEach(function(nm, ni){
+      var ci = 0, co = 0, row = "";
+      for (var i=0;i<days;i++){
+        var dt2 = dts[i], k = keyOf(dt2), tdc = (k===todayKey ? "today" : "");
+        var st = statusOf(dt2, nm);
+        if (!st){ row += '<td class="'+tdc+'"><span class="cell off">-</span></td>'; continue; }
+        if (st==="in") ci++; else co++;
+        var ov = S.overrides[k+"|"+nm];
+        row += '<td class="'+tdc+'"><'+tag+' class="cell '+st+(ov?' ov':'')+'"' + (isAdmin ? ' data-k="'+k+'" data-n="'+ni+'"' : '') + '>' + (st==="in"?"ใน":"นอก") + '</'+tag+'></td>';
+      }
+      ins.push(ci); outs.push(co);
+      if (!ql || nm.toLowerCase().indexOf(ql) !== -1){
+        body += '<tr><td class="name">'+esc(nm)+'</td>'+row+'<td class="sum">'+ci+'</td><td class="sum">'+co+'</td></tr>';
+      }
+    });
+    body += "</tbody>";
+    $("matrix").innerHTML = head + body;
+    var f = function(a){ var lo=Math.min.apply(null,a), hi=Math.max.apply(null,a); return lo===hi ? String(lo) : lo+"–"+hi; };
+    var same = ins.length && Math.min.apply(null,ins)===Math.max.apply(null,ins) && Math.min.apply(null,outs)===Math.max.apply(null,outs);
+    var fe = $("m-fair");
+    fe.className = "fair " + (same ? "ok" : "bad");
+    fe.textContent = ins.length ? ("เดือนนี้ ทุกคนเคสใน " + f(ins) + " วัน เคสนอก " + f(outs) + " วัน" + (same ? " ✓ เท่ากันทุกคน" : " (ไม่เท่ากัน)")) : "";
+    $("m-tip").textContent = isAdmin ? "แอดมิน: กดที่ช่องเพื่อสลับ (ขีดเส้นใต้ = แก้ด้วยมือ) กดซ้ำเพื่อกลับเป็นอัตโนมัติ" : "";
+  }
+
+  function syncSettings(){
+    $("s-names").value = S.names.join("\n");
+    $("s-in").value = S.inCount;
+    $("s-days").value = S.caseDays;
+    $("s-seed").value = S.seed;
+    $("s-count").textContent = "ทั้งหมด " + S.names.length + " คน";
+    ruleHint();
+  }
+  function ruleHint(){
+    var n = S.names.length || 1, v = S.inCount * S.caseDays / n, o = (n - S.inCount) * S.caseDays / n;
+    $("s-rule").textContent = Number.isInteger(v)
+      ? "เดือนที่มีครบ " + S.caseDays + " วัน ทุกคนจะได้เคสใน " + v + " วัน เคสนอก " + o + " วัน เท่ากันทุกคน (วันที่เกินจากนี้เป็นวันพัก, เดือนที่สั้นกว่าจะได้น้อยลงตามจำนวนวัน)"
+      : "หารไม่ลงตัว แต่ละคนจะต่างกันไม่เกิน 1 วัน";
+  }
+  function markDirty(){ dirty = true; renderSaveBar(); }
+  function parseNames(){
+    var seen = {}, out = [];
+    $("s-names").value.split("\n").forEach(function(l){ var t = l.trim(); if (t && !seen[t]){ seen[t]=1; out.push(t); } });
+    return out;
+  }
+
+  function saveAll(){
+    if (saving) return;
+    saving = true; renderSaveBar();
+    api("/api/state", "POST", { state: S, expectedRev: saved.rev }).then(function(r){
+      saving = false;
+      if (r.status === 200){
+        saved = r.data; norm(saved); S = clone(saved); dirty = false; resetCache(); toast("บันทึกแล้ว ทุกคนที่เปิดลิงก์จะเห็นข้อมูลใหม่"); renderChrome();
+      } else if (r.status === 401){
+        isAdmin = false; toast("หมดเวลาเข้าสู่ระบบ กรุณาล็อกอินใหม่ (การแก้ไขยังอยู่ในหน้านี้)"); renderChrome(); dirty = true; renderSaveBar();
+      } else if (r.status === 409){
+        saved = r.data.state; norm(saved); S = clone(saved); dirty = false; resetCache(); toast("มีคนแก้ไขไปก่อนหน้านี้ โหลดข้อมูลล่าสุดให้แล้ว โปรดแก้ใหม่"); renderChrome();
+      } else { toast((r.data && r.data.error) || "บันทึกไม่สำเร็จ"); renderSaveBar(); }
+    }).catch(function(){ saving = false; toast("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง"); renderSaveBar(); });
+  }
+
+  function renderSaveBar(){
+    var on = isAdmin && dirty;
+    $("savebar").hidden = !on;
+    $("save-msg").textContent = "มีการแก้ไขที่ยังไม่บันทึก (ผู้ชมทั่วไปยังไม่เห็น)";
+    $("save-go").disabled = saving; $("save-cancel").disabled = saving;
+    $("save-go").textContent = saving ? "กำลังบันทึก..." : "บันทึก";
+  }
+
+  function renderChrome(){
+    var tabs = [["day","รายวัน"],["month","ตารางเดือน"]]; if (isAdmin) tabs.push(["set","ตั้งค่า"]);
+    if (view === "set" && !isAdmin) view = "day";
+    $("tabs").innerHTML = tabs.map(function(t){ return '<button class="tab" role="tab" data-v="'+t[0]+'" aria-selected="'+(t[0]===view)+'">'+t[1]+'</button>'; }).join("");
+    $("btn-admin").textContent = isAdmin ? "ออกจากระบบแอดมิน" : "แอดมิน";
+    var sub = isAdmin ? "โหมดแอดมิน" : "ดูอย่างเดียว";
+    if (saved.updatedAt){ sub += " · อัปเดตล่าสุด " + new Date(saved.updatedAt).toLocaleString("th-TH",{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}); }
+    $("sub").textContent = sub;
+    ["day","month","set"].forEach(function(v){ $("view-"+v).hidden = (v !== view); });
+    if (view === "day") renderDay();
+    if (view === "month") renderMonth();
+    if (view === "set") syncSettings();
+    renderSaveBar();
+  }
+
+  function mount(){
+    $("root").innerHTML = SKEL;
+    $("tabs").addEventListener("click", function(e){ var b = e.target.closest("button[data-v]"); if (b){ view = b.dataset.v; renderChrome(); } });
+    function shiftDay(n){ cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate()+n); renderDay(); }
+    $("d-prev").onclick = function(){ shiftDay(-1); };
+    $("d-next").onclick = function(){ shiftDay(1); };
+    $("d-today").onclick = function(){ var t=new Date(); cur = new Date(t.getFullYear(),t.getMonth(),t.getDate()); renderDay(); };
+    $("d-date").onchange = function(){ if (this.value){ cur = fromKey(this.value); renderDay(); } };
+    function onQ(v){ q = v; $("q").value = v; $("q2").value = v; if (view==="day") renderDay(); else if (view==="month") renderMonth(); }
+    $("q").oninput = function(){ onQ(this.value); };
+    $("q2").oninput = function(){ onQ(this.value); };
+
+    $("d-copy").onclick = function(){
+      if (!base(cur)){ toast("วันนี้ไม่มีเคส"); return; }
+      var ins = [], outs = [];
+      S.names.forEach(function(nm){ (statusOf(cur,nm)==="in" ? ins : outs).push(nm); });
+      var txt = fmtLong(cur) + "\n\nเคสใน (" + ins.length + ")\n" + ins.map(function(x,i){return (i+1)+". "+x;}).join("\n") +
+                "\n\nเคสนอก (" + outs.length + ")\n" + outs.map(function(x,i){return (i+1)+". "+x;}).join("\n");
+      function fb(){ var ta = document.createElement("textarea"); ta.value = txt; document.body.appendChild(ta); ta.select();
+        try { document.execCommand("copy"); toast("คัดลอกแล้ว"); } catch(e){ toast("คัดลอกไม่สำเร็จ"); } document.body.removeChild(ta); }
+      try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function(){ toast("คัดลอกแล้ว"); }, fb); else fb(); } catch(e){ fb(); }
+    };
+
+    $("m-prev").onclick = function(){ mView = new Date(mView.getFullYear(), mView.getMonth()-1, 1); renderMonth(); };
+    $("m-next").onclick = function(){ mView = new Date(mView.getFullYear(), mView.getMonth()+1, 1); renderMonth(); };
+    $("m-today").onclick = function(){ var t=new Date(); mView = new Date(t.getFullYear(), t.getMonth(), 1); renderMonth(); };
+    $("matrix").addEventListener("click", function(e){
+      if (!isAdmin) return;
+      var b = e.target.closest("button.cell"); if (!b || !b.dataset.k) return;
+      var nm = S.names[+b.dataset.n], k = b.dataset.k, id = k+"|"+nm, bs = base(fromKey(k));
+      if (!bs) return;
+      if (!S.overrides[id]) S.overrides[id] = (bs[nm]==="in" ? "out" : "in"); else delete S.overrides[id];
+      markDirty(); renderMonth();
+    });
+
+    $("s-names").oninput = function(){ var n = parseNames(); $("s-count").textContent = "ทั้งหมด " + n.length + " คน";
+      if (n.length){ S.names = n; if (S.inCount > n.length) S.inCount = n.length; markDirty(); ruleHint(); } };
+    $("s-in").onchange = function(){ var v = parseInt(this.value,10); S.inCount = isNaN(v)?0:Math.max(0,Math.min(v,S.names.length)); this.value = S.inCount; markDirty(); ruleHint(); };
+    $("s-days").onchange = function(){ var v = parseInt(this.value,10); S.caseDays = isNaN(v)?30:Math.max(1,Math.min(v,31)); this.value = S.caseDays; markDirty(); ruleHint(); };
+    $("s-seed").oninput = function(){ S.seed = this.value || "case-1"; markDirty(); };
+    $("s-clear").onclick = function(){ S.overrides = {}; markDirty(); toast("ล้างการแก้ด้วยมือแล้ว (ยังไม่บันทึก)"); };
+    $("p-go").onclick = function(){
+      api("/api/password", "POST", { current: $("p-cur").value, "new": $("p-new").value }).then(function(r){
+        if (r.status === 200){ $("p-cur").value = ""; $("p-new").value = ""; toast("เปลี่ยนรหัสผ่านแล้ว"); }
+        else toast((r.data && r.data.error) || "เปลี่ยนรหัสผ่านไม่สำเร็จ");
+      });
+    };
+
+    $("save-go").onclick = saveAll;
+    $("save-cancel").onclick = function(){ S = clone(saved); norm(S); dirty = false; resetCache(); renderChrome(); toast("ยกเลิกการแก้ไขแล้ว"); };
+
+    $("btn-admin").onclick = function(){
+      if (isAdmin){
+        if (dirty && !confirm("มีการแก้ไขที่ยังไม่บันทึก ออกจากระบบและทิ้งการแก้ไขหรือไม่?")) return;
+        api("/api/logout", "POST", {}).then(function(){
+          isAdmin = false; S = clone(saved); norm(S); dirty = false; resetCache(); renderChrome();
+        });
+      } else { $("login").hidden = false; $("l-err").textContent = ""; $("l-id").value = ""; $("l-pw").value = ""; $("l-id").focus(); }
+    };
+    $("l-cancel").onclick = function(){ $("login").hidden = true; };
+    $("login-form").onsubmit = function(e){
+      e.preventDefault();
+      api("/api/login", "POST", { id: $("l-id").value.trim(), password: $("l-pw").value }).then(function(r){
+        if (r.status === 200){ isAdmin = true; $("login").hidden = true; renderChrome(); toast("เข้าสู่ระบบแอดมินแล้ว"); }
+        else $("l-err").textContent = (r.data && r.data.error) || "เข้าสู่ระบบไม่สำเร็จ";
+      }).catch(function(){ $("l-err").textContent = "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้"; });
+    };
+
+    // ดึงข้อมูลล่าสุดทุก 60 วินาที (ถ้ากำลังแก้ไขอยู่จะไม่แตะ)
+    setInterval(function(){
+      if (document.hidden || dirty || saving) return;
+      api("/api/state").then(function(r){
+        if (r.status === 200 && r.data && r.data.rev !== saved.rev && !dirty){
+          saved = r.data; norm(saved); S = clone(saved); resetCache(); renderChrome();
+        }
+      }).catch(function(){});
+    }, 60000);
+
+    renderChrome();
+  }
+  mount();
+})();
+{% endraw %}
+</script>
+</body>
+</html>
